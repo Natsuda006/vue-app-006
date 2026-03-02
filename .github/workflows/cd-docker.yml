@@ -1,4 +1,4 @@
-name: 'build and deploy production'
+name: build and deploy production
 
 on:
   push:
@@ -11,34 +11,44 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build image and push to GitHub Packages (Docker Registry)
+      - name: Build image and push to GHCR
         uses: mr-smithers-excellent/docker-build-push@v6
         with:
-          image: ${{ github.event.repository.name }}
+          image: vue-app-006
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: natsuda006   # 👈 lowercase เท่านั้น
           password: ${{ secrets.GITHUB_TOKEN }}
+          tags: ${{ github.ref_name }}
 
   auto-deploy-docker-job:
     needs: release-docker-image-job
     runs-on: ubuntu-latest
+
     env:
-      CONTAINER_NAME: 'vue-app-006'
-      DOCKER_IMAGE_URL: 'ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}:${{  github.ref_name }}'
+      CONTAINER_NAME: vue-app-006
+      DOCKER_IMAGE_URL: ghcr.io/natsuda006/vue-app-006:${{ github.ref_name }}
+
     steps:
-      - name: executing remote ssh commands using password
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: '167.172.92.228' #production url: 159.223.41.181:9003
-          username: 'root'
-          password: '${{ secrets.DO_SECRET }}'
-          port: '22'
+          host: 167.172.92.228
+          username: root
+          password: ${{ secrets.DO_SECRET }}
+          port: 22
           script: |
-            docker logout ghcr.io
-            docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}  ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
-            docker rm -f ${{ env.CONTAINER_NAME }} || true
-            docker pull ${{ env.DOCKER_IMAGE_URL }}
-            docker run --restart=always -d --name ${{ env.CONTAINER_NAME }} -p 9777:80 ${{ env.DOCKER_IMAGE_URL }}
+            docker logout ghcr.io || true
+            docker login ghcr.io -u natsuda006 -p ${{ secrets.GITHUB_TOKEN }}
+
+            docker rm -f vue-app-006 || true
+            docker pull ghcr.io/natsuda006/vue-app-006:${{ github.ref_name }}
+
+            docker run -d \
+              --name vue-app-006 \
+              --restart=always \
+              -p 9777:80 \
+              ghcr.io/natsuda006/vue-app-006:${{ github.ref_name }}
