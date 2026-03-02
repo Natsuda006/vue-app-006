@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CONTAINER_NAME: 'vue-app-006'
-      DOCKER_IMAGE_URL: 'ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}:${{  github.ref_name }}'
+      DOCKER_IMAGE_URL: 'ghcr.io/${{ github.actor | lower }}/${{ github.event.repository.name | lower }}:${{  github.ref_name }}'
     steps:
       - name: executing remote ssh commands using password
         uses: appleboy/ssh-action@v1.0.0
@@ -38,7 +38,7 @@ jobs:
           port: '22'
           script: |
             docker logout ghcr.io
-            docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}  ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
+            docker login -u ${{ github.actor | lower }} -p ${{ secrets.GITHUB_TOKEN }}  ghcr.io/${{ github.actor | lower }}/${{ github.event.repository.name | lower }}
             docker rm -f ${{ env.CONTAINER_NAME }} || true
             docker pull ${{ env.DOCKER_IMAGE_URL }}
             docker run --restart=always -d --name ${{ env.CONTAINER_NAME }} -p 9719:80 ${{ env.DOCKER_IMAGE_URL }}
