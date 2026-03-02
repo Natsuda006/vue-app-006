@@ -27,7 +27,7 @@ jobs:
       - name: Build and push Docker image
         uses: mr-smithers-excellent/docker-build-push@v6
         with:
-          image: vue-app # ไม่ต้องใส่ naruapon ซ้ำ
+          image: vue-app-006 # ไม่ต้องใส่ naruapon ซ้ำ
           registry: ghcr.io/natsuda006
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
